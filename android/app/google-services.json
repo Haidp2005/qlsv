@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "961270380068",
+    "project_id": "qlsv-29e99",
+    "storage_bucket": "qlsv-29e99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:961270380068:android:6ba4dc97b62944cffdcab1",
+        "android_client_info": {
+          "package_name": "com.example.qlsv"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbt6ktEEA89rwjwFPr2Eol3L_nEak8nZs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
