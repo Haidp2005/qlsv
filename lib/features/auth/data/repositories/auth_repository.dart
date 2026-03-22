@@ -35,43 +35,4 @@ class AuthRepository {
   Future<void> logout() async {
     await _firebaseAuth.signOut();
   }
-
-  // TODO: TẠM THỜI - Nút bấm trên UI gọi hàm này để tạo sẵn tài khoản test cho Giảng viên & Sinh viên
-  Future<void> seedInitialData() async {
-    try {
-      // 1. Sinh viên
-      User? studentUser;
-      try {
-        final c1 = await _firebaseAuth.createUserWithEmailAndPassword(email: 'student@gmail.com', password: 'password123');
-        studentUser = c1.user;
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'email-already-in-use') {
-          final c1 = await _firebaseAuth.signInWithEmailAndPassword(email: 'student@gmail.com', password: 'password123');
-          studentUser = c1.user;
-        } else rethrow;
-      }
-      if (studentUser != null) {
-        await _firestore.collection('users').doc(studentUser.uid).set({'email': 'student@gmail.com', 'role': 'student'});
-      }
-
-      // 2. Giảng viên
-      User? lecturerUser;
-      try {
-        final c2 = await _firebaseAuth.createUserWithEmailAndPassword(email: 'lecturer@gmail.com', password: 'password123');
-        lecturerUser = c2.user;
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'email-already-in-use') {
-          final c2 = await _firebaseAuth.signInWithEmailAndPassword(email: 'lecturer@gmail.com', password: 'password123');
-          lecturerUser = c2.user;
-        } else rethrow;
-      }
-      if (lecturerUser != null) {
-        await _firestore.collection('users').doc(lecturerUser.uid).set({'email': 'lecturer@gmail.com', 'role': 'lecturer'});
-      }
-
-      await _firebaseAuth.signOut(); // Trở về trạng thái chưa đăng nhập
-    } catch (e) {
-      throw Exception('Lỗi tạo mẫu: $e');
-    }
-  }
 }

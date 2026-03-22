@@ -102,25 +102,6 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: _onLoginPressed,
                       isLoading: isLoading,
                     ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () async {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Đang tạo dữ liệu trên Firebase bằng API... Vui lòng chờ 3s')),
-                        );
-                        await context.read<AuthRepository>().seedInitialData();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('XONG! Tài khoản Test:\nSV: student@gmail.com\nGV: lecturer@gmail.com\nPass: password123'),
-                            duration: Duration(seconds: 10),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        '>> Bấm vào đây để Tự tạo Mock Data Giảng Viên & Sinh Viên',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
                   ],
                 ),
               ),
