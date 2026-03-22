@@ -35,7 +35,11 @@ class LecturerClassDetailPage extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Card(
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -43,7 +47,9 @@ class LecturerClassDetailPage extends StatelessWidget {
                     children: [
                       Text(
                         '${classroom.courseCode} - ${classroom.courseName}',
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
                       const SizedBox(height: 8),
                       Text('Học kỳ: ${classroom.semester}'),
@@ -71,15 +77,67 @@ class LecturerClassDetailPage extends StatelessWidget {
               const SizedBox(height: 8),
               ...classroom.students.map(
                 (student) => Card(
-                  child: ListTile(
-                    leading: CircleAvatar(child: Text(student.fullName[0])),
-                    title: Text(student.fullName),
-                    subtitle: Text(
-                      'MSSV: ${student.id} • Điểm danh: ${student.attendedSessions}/${student.totalSessions} (${student.attendanceRate.toStringAsFixed(0)}%)',
-                    ),
-                    trailing: Text(
-                      'GK: ${_scoreOrDash(student.midtermScore)}\nCK: ${_scoreOrDash(student.finalScore)}\nTB: ${_scoreOrDash(student.overallScore)}',
-                      textAlign: TextAlign.right,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
+                              child: Text(student.fullName[0]),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    student.fullName,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                  Text('MSSV: ${student.id}'),
+                                ],
+                              ),
+                            ),
+                            _ScoreChip(
+                              label: 'TB',
+                              value: _scoreOrDash(student.overallScore),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Điểm danh: ${student.attendedSessions}/${student.totalSessions} (${student.attendanceRate.toStringAsFixed(0)}%)',
+                        ),
+                        const SizedBox(height: 6),
+                        LinearProgressIndicator(
+                          value: (student.attendanceRate / 100).clamp(0.0, 1.0),
+                          minHeight: 7,
+                          borderRadius: BorderRadius.circular(99),
+                          color: Colors.teal,
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            _ScoreChip(
+                              label: 'GK',
+                              value: _scoreOrDash(student.midtermScore),
+                            ),
+                            _ScoreChip(
+                              label: 'CK',
+                              value: _scoreOrDash(student.finalScore),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -96,5 +154,34 @@ class LecturerClassDetailPage extends StatelessWidget {
       return '--';
     }
     return score.toStringAsFixed(1);
+  }
+}
+
+class _ScoreChip extends StatelessWidget {
+  const _ScoreChip({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: colorScheme.tertiaryContainer.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        '$label: $value',
+        style: TextStyle(
+          color: colorScheme.onTertiaryContainer,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
   }
 }

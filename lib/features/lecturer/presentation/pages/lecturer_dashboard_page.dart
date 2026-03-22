@@ -146,27 +146,56 @@ class _LecturerClassesTab extends StatelessWidget {
           separatorBuilder: (_, index) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             if (index == 0) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Tổng quan giảng dạy',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Số lớp đang phụ trách: ${state.classes.length}'),
-                      Text('Tổng sinh viên quản lý: $totalStudents'),
-                      Text('Lớp học trong hôm nay: $classesToday'),
+              final colorScheme = Theme.of(context).colorScheme;
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colorScheme.primary,
+                      colorScheme.primary.withValues(alpha: 0.8),
                     ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tổng quan giảng dạy',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: colorScheme.onPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Số lớp đang phụ trách: ${state.classes.length}',
+                      style: TextStyle(color: colorScheme.onPrimary),
+                    ),
+                    Text(
+                      'Tổng sinh viên quản lý: $totalStudents',
+                      style: TextStyle(color: colorScheme.onPrimary),
+                    ),
+                    Text(
+                      'Lớp học trong hôm nay: $classesToday',
+                      style: TextStyle(color: colorScheme.onPrimary),
+                    ),
+                  ],
                 ),
               );
             }
 
             final classroom = state.classes[index - 1];
+            final attendanceProgress =
+                (classroom.averageAttendanceRate / 100).clamp(0.0, 1.0);
+            final gradingProgress = classroom.totalStudents == 0
+                ? 0.0
+                : (classroom.gradedStudentsCount / classroom.totalStudents)
+                    .clamp(0.0, 1.0);
+
             return Card(
               child: Padding(
                 padding: const EdgeInsets.all(14),
@@ -187,6 +216,37 @@ class _LecturerClassesTab extends StatelessWidget {
                     ),
                     Text(
                       'Đã nhập điểm: ${classroom.gradedStudentsCount}/${classroom.totalStudents}',
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _InfoBadge(
+                          icon: Icons.calendar_month,
+                          label: classroom.semester,
+                        ),
+                        _InfoBadge(
+                          icon: Icons.meeting_room,
+                          label: classroom.room,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _MetricProgress(
+                      label: 'Tiến độ điểm danh',
+                      valueText:
+                          '${classroom.averageAttendanceRate.toStringAsFixed(1)}%',
+                      progress: attendanceProgress,
+                      color: Colors.teal,
+                    ),
+                    const SizedBox(height: 8),
+                    _MetricProgress(
+                      label: 'Tiến độ nhập điểm',
+                      valueText:
+                          '${classroom.gradedStudentsCount}/${classroom.totalStudents}',
+                      progress: gradingProgress,
+                      color: Colors.deepPurple,
                     ),
                     const SizedBox(height: 8),
                     Align(
@@ -247,6 +307,12 @@ class _LecturerAttendanceTab extends StatelessWidget {
       builder: (context, state) {
         final selectedClassId = state.selectedAttendanceClassId;
         final selectedClass = state.selectedAttendanceClass;
+        final currentDraft = selectedClass == null
+            ? const <String, bool>{}
+            : (state.attendanceDraftByClass[selectedClass.id] ??
+                const <String, bool>{});
+        final selectedPresentCount =
+            currentDraft.values.where((isPresent) => isPresent).length;
 
         if (state.classes.isEmpty) {
           return const Center(child: Text('Chưa có dữ liệu lớp học phần.'));
@@ -289,26 +355,55 @@ class _LecturerAttendanceTab extends StatelessWidget {
             else
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: Wrap(
-                  spacing: 8,
+                child: Column(
                   children: [
-                    ActionChip(
-                      avatar: const Icon(Icons.done_all, size: 18),
-                      label: const Text('Tất cả có mặt'),
-                      onPressed: () {
-                        context
-                            .read<LecturerModuleCubit>()
-                            .markAllAttendanceForSelectedClass(true);
-                      },
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color:
+                            Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          _StatPill(
+                            icon: Icons.groups,
+                            label: 'Sĩ số: ${selectedClass.totalStudents}',
+                          ),
+                          _StatPill(
+                            icon: Icons.done_all,
+                            label: 'Đã chọn có mặt: $selectedPresentCount',
+                          ),
+                        ],
+                      ),
                     ),
-                    ActionChip(
-                      avatar: const Icon(Icons.remove_done, size: 18),
-                      label: const Text('Tất cả vắng'),
-                      onPressed: () {
-                        context
-                            .read<LecturerModuleCubit>()
-                            .markAllAttendanceForSelectedClass(false);
-                      },
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        ActionChip(
+                          avatar: const Icon(Icons.done_all, size: 18),
+                          label: const Text('Tất cả có mặt'),
+                          onPressed: () {
+                            context
+                                .read<LecturerModuleCubit>()
+                                .markAllAttendanceForSelectedClass(true);
+                          },
+                        ),
+                        ActionChip(
+                          avatar: const Icon(Icons.remove_done, size: 18),
+                          label: const Text('Tất cả vắng'),
+                          onPressed: () {
+                            context
+                                .read<LecturerModuleCubit>()
+                                .markAllAttendanceForSelectedClass(false);
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -316,9 +411,6 @@ class _LecturerAttendanceTab extends StatelessWidget {
             if (selectedClass != null)
               ...selectedClass.students.map(
                 (student) {
-                  final currentDraft =
-                      state.attendanceDraftByClass[selectedClass.id] ??
-                          const <String, bool>{};
                   final isPresent = currentDraft[student.id] ?? false;
 
                   return Card(
@@ -417,6 +509,12 @@ class _LecturerGradingTab extends StatelessWidget {
               ...selectedClass.students.map(
                 (student) => Card(
                   child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                      child: Text(student.fullName[0]),
+                    ),
                     title: Text(student.fullName),
                     subtitle: Text(
                       'MSSV: ${student.id} • GK: ${_scoreOrDash(student.midtermScore)} • CK: ${_scoreOrDash(student.finalScore)} • TB: ${_scoreOrDash(student.overallScore)}',
@@ -450,6 +548,16 @@ class _LecturerGradingTab extends StatelessWidget {
                       Text(
                         'Đã nhập điểm: ${selectedClass.gradedStudentsCount}/${selectedClass.totalStudents}',
                       ),
+                      const SizedBox(height: 4),
+                      LinearProgressIndicator(
+                        value: selectedClass.totalStudents == 0
+                            ? 0
+                            : selectedClass.gradedStudentsCount /
+                                selectedClass.totalStudents,
+                        minHeight: 8,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      const SizedBox(height: 8),
                       Text(
                         'Điểm trung bình lớp: ${_scoreOrDash(selectedClass.averageOverallScore)}',
                       ),
@@ -553,5 +661,114 @@ class _LecturerGradingTab extends StatelessWidget {
       return '--';
     }
     return score.toStringAsFixed(1);
+  }
+}
+
+class _InfoBadge extends StatelessWidget {
+  const _InfoBadge({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  const _StatPill({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricProgress extends StatelessWidget {
+  const _MetricProgress({
+    required this.label,
+    required this.valueText,
+    required this.progress,
+    required this.color,
+  });
+
+  final String label;
+  final String valueText;
+  final double progress;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            Text(valueText),
+          ],
+        ),
+        const SizedBox(height: 5),
+        LinearProgressIndicator(
+          value: progress,
+          minHeight: 7,
+          color: color,
+          borderRadius: BorderRadius.circular(99),
+        ),
+      ],
+    );
   }
 }
