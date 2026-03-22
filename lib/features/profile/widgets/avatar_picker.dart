@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AvatarPicker extends StatefulWidget {
   const AvatarPicker({super.key});
@@ -11,8 +12,11 @@ class AvatarPicker extends StatefulWidget {
 }
 
 class _AvatarPickerState extends State<AvatarPicker> {
-  File? _imageFile;
   final ImagePicker _picker = ImagePicker();
+  String? _avatarUrl;
+  bool _uploading = false;
+
+  final _supabase = Supabase.instance.client;
 
   @override
   void initState() {
@@ -21,28 +25,57 @@ class _AvatarPickerState extends State<AvatarPicker> {
   }
 
   Future<void> _loadAvatar() async {
-    final prefs = await SharedPreferences.getInstance();
-    final path = prefs.getString('user_avatar_path');
-    if (path != null && File(path).existsSync()) {
-      setState(() {
-        _imageFile = File(path);
-      });
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      final signedUrl = await _supabase.storage
+          .from('avatars')
+          .createSignedUrl('$uid/avatar.jpg', 60 * 60 * 24);
+      if (mounted) {
+        setState(() => _avatarUrl = signedUrl);
+      }
+    } catch (_) {
+      // Chưa có ảnh, giữ mặc định
     }
   }
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickAndUpload(ImageSource source) async {
     try {
-      final pickedFile = await _picker.pickImage(source: source);
-      if (pickedFile != null) {
+      final picked = await _picker.pickImage(source: source, imageQuality: 70);
+      if (picked == null) return;
+
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+
+      setState(() => _uploading = true);
+
+      final file = File(picked.path);
+      await _supabase.storage.from('avatars').upload(
+            '$uid/avatar.jpg',
+            file,
+            fileOptions: const FileOptions(upsert: true, contentType: 'image/jpeg'),
+          );
+
+      final signedUrl = await _supabase.storage
+          .from('avatars')
+          .createSignedUrl('$uid/avatar.jpg', 60 * 60 * 24);
+
+      if (mounted) {
         setState(() {
-          _imageFile = File(pickedFile.path);
+          _avatarUrl = signedUrl;
+          _uploading = false;
         });
-        // Lưu ảnh tạm thời xuống điện thoại thay vì gọi API (Position 4 scope)
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_avatar_path', pickedFile.path);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cập nhật ảnh đại diện thành công!')),
+        );
       }
     } catch (e) {
-      debugPrint('Lỗi chọn ảnh: $e');
+      if (mounted) {
+        setState(() => _uploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi tải ảnh: $e')),
+        );
+      }
     }
   }
 
@@ -56,16 +89,16 @@ class _AvatarPickerState extends State<AvatarPicker> {
               leading: const Icon(Icons.photo_library),
               title: const Text('Thư viện ảnh'),
               onTap: () {
-                _pickImage(ImageSource.gallery);
                 Navigator.pop(context);
+                _pickAndUpload(ImageSource.gallery);
               },
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera),
               title: const Text('Chụp ảnh mới'),
               onTap: () {
-                _pickImage(ImageSource.camera);
                 Navigator.pop(context);
+                _pickAndUpload(ImageSource.camera);
               },
             ),
           ],
@@ -84,8 +117,12 @@ class _AvatarPickerState extends State<AvatarPicker> {
           CircleAvatar(
             radius: 50,
             backgroundColor: Colors.grey[300],
-            backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
-            child: _imageFile == null ? const Icon(Icons.person, size: 50, color: Colors.grey) : null,
+            backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
+            child: _uploading
+                ? const CircularProgressIndicator(color: Colors.white)
+                : (_avatarUrl == null
+                    ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                    : null),
           ),
           const CircleAvatar(
             radius: 16,

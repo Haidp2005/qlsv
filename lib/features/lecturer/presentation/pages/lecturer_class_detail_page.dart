@@ -81,13 +81,6 @@ class LecturerClassDetailPage extends StatelessWidget {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                        tooltip: 'In Mới bảng điểm (PDF)',
-                        onPressed: () {
-                          ExportUtils.exportPdf(context, classroom!);
-                        },
-                      ),
-                      IconButton(
                         icon: const Icon(Icons.table_chart, color: Colors.green),
                         tooltip: 'Xuất Tệp Lớp (Excel)',
                         onPressed: () {

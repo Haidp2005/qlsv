@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_router.dart';
@@ -12,6 +13,11 @@ void main() async {
   
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  await Supabase.initialize(
+    url: 'https://ezytrszctpwtjvdwukqt.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6eXRyc3pjdHB3dGp2ZHd1a3F0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MjE4MzMsImV4cCI6MjA4ODI5NzgzM30.xJwpwGQ0NAa00hVCR1OkyUYL37o7ocpxBT0yzBEArVM',
   );
 
   runApp(const QlsvApp());
