@@ -5,8 +5,13 @@ import '../../features/lecturer/presentation/pages/lecturer_dashboard_page.dart'
 import 'route_constants.dart';
 
 class AppRouter {
+  static const String _initialRoute = String.fromEnvironment(
+    'APP_INITIAL_ROUTE',
+    defaultValue: RouteConstants.login,
+  );
+
   static final GoRouter router = GoRouter(
-    initialLocation: RouteConstants.login,
+    initialLocation: _initialRoute,
     routes: [
       GoRoute(
         path: RouteConstants.login,
