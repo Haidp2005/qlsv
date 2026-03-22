@@ -1,0 +1,49 @@
+Building Windows application...                                 
+flutter : CMake 
+Deprecation Warning at 
+D:/qlsv/build/windows/x
+64/extracted/firebase_c
+pp_sdk_windows/CMakeLis
+ts.txt:17 (cmake_minimu
+m_required):
+At line:1 char:31
++ ... 
+B_CACHE="D:\PubCache"; 
+flutter build windows 
+> build_error_7.txt 
+2>&1
++                      
+      ~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (CMake Depreca   
+ ti...imum_required    
+)::String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+  Compatibility with 
+CMake < 3.10 will be 
+removed from a future 
+version of
+  CMake.
+
+  Update the VERSION 
+argument <min> value.  
+Or, use the 
+<min>...<max> syntax
+  to tell CMake that 
+the project requires 
+at least <min> but has 
+been updated
+  to work with 
+policies introduced by 
+<max> or earlier.
+
+
+Building Windows application...                                   211.1s
+√ Built build\windows\x64\runner\Release\qlsv.exe
