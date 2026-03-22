@@ -1,0 +1,14 @@
+Building Windows application...                                 
+CMake Deprecation Warning at D:/qlsv/build/windows/x64/extracted/firebase_cpp_sdk_windows/CMakeLists.txt:17 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+Target dart_build failed : error : Building native assets failed. See the logs for more details. [D:\qlsv\build\windows\x64\flutter\flutter_assemble.vcxproj]
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(254,5): error MSB8066: Custom build for 'D:\qlsv\build\windows\x64\CMakeFiles\f8df176ee5d1a2c3743d55c0f2153f71\flutter_windows.dll.rule;D:\qlsv\build\windows\x64\CMakeFiles\13ee2c803f9746a747eb66dbf50fcfed\flutter_assemble.rule' exited with code 1. [D:\qlsv\build\windows\x64\flutter\flutter_assemble.vcxproj]
+Building Windows application...                                    30.8s
+Build process failed.

@@ -1,0 +1,15 @@
+Analyzing qlsv...                                               
+
+  error - Target of URI doesn't exist: '../features/position4_dashboard.dart' - lib\core\routes\app_router.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../features/profile/screens/profile_screen.dart' - lib\core\routes\app_router.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../features/notifications/screens/notification_screen.dart' - lib\core\routes\app_router.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../features/profile/screens/change_password_screen.dart' - lib\core\routes\app_router.dart:6:8 - uri_does_not_exist
+  error - The name 'Position4Dashboard' isn't a class - lib\core\routes\app_router.dart:14:44 - creation_with_non_type
+  error - The name 'ProfileScreen' isn't a class - lib\core\routes\app_router.dart:18:44 - creation_with_non_type
+  error - The name 'NotificationScreen' isn't a class - lib\core\routes\app_router.dart:22:44 - creation_with_non_type
+  error - The name 'ChangePasswordScreen' isn't a class - lib\core\routes\app_router.dart:26:44 - creation_with_non_type
+  error - 2 positional arguments expected by 'exportStudentList', but 0 found - lib\features\position4_dashboard.dart:32:51 - not_enough_positional_arguments
+  error - 2 positional arguments expected by 'exportGradeSheetPDF', but 0 found - lib\features\position4_dashboard.dart:39:51 - not_enough_positional_arguments
+  error - Target of URI doesn't exist: '../../core/routes/route_constants.dart' - lib\features\profile\screens\profile_screen.dart:4:8 - uri_does_not_exist
+  error - Undefined name 'RouteConstants' - lib\features\profile\screens\profile_screen.dart:68:30 - undefined_identifier
+
