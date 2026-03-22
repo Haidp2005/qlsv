@@ -5,14 +5,16 @@ class StudentProfile extends Equatable {
     required this.studentId,
     required this.fullName,
     required this.className,
+    this.avatarBase64,
   });
 
   final String studentId;
   final String fullName;
   final String className;
+  final String? avatarBase64;
 
   @override
-  List<Object?> get props => [studentId, fullName, className];
+  List<Object?> get props => [studentId, fullName, className, avatarBase64];
 }
 
 class TimetableItem extends Equatable {

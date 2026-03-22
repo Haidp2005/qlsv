@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 
 import '../../data/models/student_models.dart';
 
 class StudentOverviewTab extends StatelessWidget {
-  const StudentOverviewTab({super.key, required this.data});
+  const StudentOverviewTab({
+    super.key,
+    required this.data,
+    required this.onChangeAvatar,
+  });
 
   final StudentHomeData data;
+  final Future<void> Function(String avatarBase64) onChangeAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +32,7 @@ class StudentOverviewTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _ProfileCard(profile: data.profile),
+        _ProfileCard(profile: data.profile, onChangeAvatar: onChangeAvatar),
         const SizedBox(height: 16),
         Row(
           children: [
@@ -82,18 +90,100 @@ class StudentOverviewTab extends StatelessWidget {
 }
 
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({required this.profile});
+  const _ProfileCard({required this.profile, required this.onChangeAvatar});
 
   final StudentProfile profile;
+  final Future<void> Function(String avatarBase64) onChangeAvatar;
+
+  Uint8List? _decodeAvatar() {
+    final avatarBase64 = profile.avatarBase64;
+    if (avatarBase64 == null || avatarBase64.isEmpty) {
+      return null;
+    }
+
+    try {
+      return base64Decode(avatarBase64);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _pickAndChangeAvatar(BuildContext context) async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
+
+    if (pickedImage == null) {
+      return;
+    }
+
+    try {
+      final imageBytes = await pickedImage.readAsBytes();
+      final avatarBase64 = base64Encode(imageBytes);
+      await onChangeAvatar(avatarBase64);
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đã cập nhật avatar.')));
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể cập nhật avatar.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final avatarBytes = _decodeAvatar();
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            const CircleAvatar(radius: 24, child: Icon(Icons.person_outline)),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundImage: avatarBytes == null
+                      ? null
+                      : MemoryImage(avatarBytes),
+                  child: avatarBytes == null
+                      ? const Icon(Icons.person_outline)
+                      : null,
+                ),
+                Positioned(
+                  right: -6,
+                  bottom: -6,
+                  child: Material(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () => _pickAndChangeAvatar(context),
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(
+                          Icons.camera_alt_outlined,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

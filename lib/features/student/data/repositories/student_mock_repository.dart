@@ -1,6 +1,8 @@
 import '../models/student_models.dart';
 
 class StudentMockRepository {
+  static String? _avatarBase64;
+
   Future<StudentHomeData> fetchStudentHomeData() async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
 
@@ -96,14 +98,19 @@ class StudentMockRepository {
     ];
 
     return StudentHomeData(
-      profile: const StudentProfile(
+      profile: StudentProfile(
         studentId: '22012345',
         fullName: 'Nguyễn Văn Sinh Viên',
         className: 'K67-CNTT1',
+        avatarBase64: _avatarBase64,
       ),
       todaySchedule: weekSchedule.where((item) => item.day == 'Thứ 2').toList(),
       weekSchedule: weekSchedule,
       subjects: subjects,
     );
+  }
+
+  Future<void> updateAvatar(String avatarBase64) async {
+    _avatarBase64 = avatarBase64;
   }
 }

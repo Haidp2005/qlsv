@@ -16,11 +16,26 @@ class StudentDashboardPage extends StatefulWidget {
 class _StudentDashboardPageState extends State<StudentDashboardPage> {
   final StudentMockRepository _repository = StudentMockRepository();
 
-  late final Future<StudentHomeData> _homeDataFuture = _repository
-      .fetchStudentHomeData();
+  late Future<StudentHomeData> _homeDataFuture;
   int _currentIndex = 0;
 
   static const _tabTitles = <String>['Tổng quan', 'Thời khóa biểu', 'Môn học'];
+
+  @override
+  void initState() {
+    super.initState();
+    _homeDataFuture = _repository.fetchStudentHomeData();
+  }
+
+  Future<void> _onChangeAvatar(String avatarBase64) async {
+    await _repository.updateAvatar(avatarBase64);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _homeDataFuture = _repository.fetchStudentHomeData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +59,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
 
         final data = snapshot.data!;
         final tabViews = [
-          StudentOverviewTab(data: data),
+          StudentOverviewTab(data: data, onChangeAvatar: _onChangeAvatar),
           StudentTimetableTab(schedule: data.weekSchedule),
           StudentSubjectsTab(subjects: data.subjects),
         ];
