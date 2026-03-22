@@ -35,7 +35,12 @@ class AppRouter {
       ),
       GoRoute(
         path: RouteConstants.profile,
-        builder: (context, state) => const ProfileScreen(role: 'student'),
+        builder: (context, state) {
+          // Lấy role được truyền qua extra (vd: context.push(..., extra: 'lecturer'))
+          // Mặc định là 'student' nếu không truyền
+          final role = (state.extra as String?) ?? 'student';
+          return ProfileScreen(role: role);
+        },
       ),
       GoRoute(
         path: RouteConstants.notifications,

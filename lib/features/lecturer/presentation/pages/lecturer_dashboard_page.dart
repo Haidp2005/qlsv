@@ -70,7 +70,7 @@ class _LecturerDashboardPageState extends State<LecturerDashboardPage> {
                   IconButton(
                     tooltip: 'Hồ sơ & Xuất File (Dev 4)',
                     icon: const Icon(Icons.person_pin, size: 28),
-                    onPressed: () => context.push(RouteConstants.profile),
+                    onPressed: () => context.push(RouteConstants.profile, extra: 'lecturer'),
                   ),
                   IconButton(
                     tooltip: 'Đồng bộ Firestore',

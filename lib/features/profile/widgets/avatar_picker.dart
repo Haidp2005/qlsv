@@ -18,24 +18,44 @@ class _AvatarPickerState extends State<AvatarPicker> {
 
   final _supabase = Supabase.instance.client;
 
+  /// Lấy uid của người dùng hiện tại.
+  /// Nếu chưa đăng nhập Firebase (chế độ demo), dùng 'lecturer_demo_001'.
+  String get _currentUid {
+    return FirebaseAuth.instance.currentUser?.uid ?? 'lecturer_demo_001';
+  }
+
   @override
   void initState() {
     super.initState();
     _loadAvatar();
   }
 
+  /// Hàm phụ trợ: Thêm timestamp vào URL để đánh lừa bộ nhớ đệm (Cache Busting).
+  /// Giúp Flutter luôn tải ảnh mới nhất thay vì dùng lại ảnh cũ trong bộ nhớ.
+  String _bustCache(String url) {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    // signedUrl của Supabase thường đã chứa dấu '?' cho tham số bảo mật.
+    // Nên ta dùng '&' để nối thêm. Nếu chưa có thì dùng '?'.
+    if (url.contains('?')) {
+      return '$url&t=$timestamp';
+    } else {
+      return '$url?t=$timestamp';
+    }
+  }
+
   Future<void> _loadAvatar() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    final uid = _currentUid;
     try {
       final signedUrl = await _supabase.storage
           .from('avatars')
-          .createSignedUrl('$uid/avatar.jpg', 60 * 60 * 24);
+          .createSignedUrl('$uid/avatar.jpg', 60 * 60 * 24 * 7); // 7 ngày
+      
       if (mounted) {
-        setState(() => _avatarUrl = signedUrl);
+        // Gọi hàm _bustCache trước khi gán vào UI
+        setState(() => _avatarUrl = _bustCache(signedUrl));
       }
-    } catch (_) {
-      // Chưa có ảnh, giữ mặc định
+    } catch (e) {
+      debugPrint('[AvatarPicker] Không tải được ảnh: $e');
     }
   }
 
@@ -44,29 +64,47 @@ class _AvatarPickerState extends State<AvatarPicker> {
       final picked = await _picker.pickImage(source: source, imageQuality: 70);
       if (picked == null) return;
 
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) return;
+      final uid = _currentUid;
 
       setState(() => _uploading = true);
 
       final file = File(picked.path);
-      await _supabase.storage.from('avatars').upload(
+
+      // 1. Xoá ảnh cũ (có thể giữ lại đoạn này để dọn dẹp triệt để)
+      try {
+        await _supabase.storage.from('avatars').remove(['$uid/avatar.jpg']);
+      } catch (e) {
+        debugPrint('[AvatarPicker] Không có ảnh cũ để xoá hoặc lỗi: $e');
+      }
+
+      // 2. Upload ảnh mới (Sử dụng readAsBytes để đảm bảo lấy dữ liệu mới nhất)
+      final bytes = await picked.readAsBytes();
+      await _supabase.storage.from('avatars').uploadBinary(
             '$uid/avatar.jpg',
-            file,
+            bytes,
             fileOptions: const FileOptions(upsert: true, contentType: 'image/jpeg'),
           );
 
+      // Tạo signed URL mới sau khi upload thành công
       final signedUrl = await _supabase.storage
           .from('avatars')
-          .createSignedUrl('$uid/avatar.jpg', 60 * 60 * 24);
+          .createSignedUrl('$uid/avatar.jpg', 60 * 60 * 24 * 7);
 
       if (mounted) {
         setState(() {
-          _avatarUrl = signedUrl;
+          // Quan trọng: Gọi hàm _bustCache cho URL mới tải lên
+          _avatarUrl = _bustCache(signedUrl);
           _uploading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cập nhật ảnh đại diện thành công!')),
+        );
+      }
+    } on StorageException catch (e) {
+      if (mounted) {
+        setState(() => _uploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi Supabase Storage: ${e.message}')),
         );
       }
     } catch (e) {
