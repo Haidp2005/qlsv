@@ -67,7 +67,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Sinh viên - ${_tabTitles[_currentIndex]}'),
+            title: Text('TH5 - Nhóm 13 - ${_tabTitles[_currentIndex]}'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.person_pin, size: 28),

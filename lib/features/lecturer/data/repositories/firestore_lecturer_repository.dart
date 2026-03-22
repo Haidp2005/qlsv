@@ -94,6 +94,12 @@ class FirestoreLecturerRepository implements LecturerRepository {
     }
 
     await batch.commit();
+
+    // Ghi fullName mặc định cho Giảng viên nếu chưa có
+    await _firestore.collection('users').doc(lecturerId).set(
+      {'fullName': 'Giảng viên ${lecturerId.toUpperCase()}'},
+      SetOptions(merge: true),
+    );
   }
 
   @override

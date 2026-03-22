@@ -27,37 +27,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('user_name');
     String? foundName;
-    String id = '';
 
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
         if (userDoc.exists && userDoc.data() != null) {
           final userData = userDoc.data()!;
-          id = userData['studentId'] as String? ?? '';
-          
-          if (userData['role'] == 'student' && id.isNotEmpty) {
-            final classSnaps = await FirebaseFirestore.instance.collection('classes').where('studentIds', arrayContains: id).limit(1).get();
+          final studentId = userData['studentId'] as String? ?? '';
+          final role = userData['role'] as String? ?? 'student';
+
+          // Ưu tiên: Tìm tên thật trong CSDL lớp học (nguồn gốc)
+          if (role == 'student' && studentId.isNotEmpty) {
+            final classSnaps = await FirebaseFirestore.instance
+                .collection('classes')
+                .where('studentIds', arrayContains: studentId)
+                .limit(1)
+                .get();
             if (classSnaps.docs.isNotEmpty) {
-              final studentSnap = await classSnaps.docs.first.reference.collection('students').doc(id).get();
+              final studentSnap = await classSnaps.docs.first.reference
+                  .collection('students')
+                  .doc(studentId)
+                  .get();
               if (studentSnap.exists && studentSnap.data() != null) {
                 foundName = studentSnap.data()!['fullName'] as String?;
               }
             }
-            foundName ??= 'Sinh viên $id';
+            // Fallback về fullName ở trang users (do người dùng sửa)
+            foundName ??= userData['fullName'] as String?;
+            foundName ??= 'Sinh viên $studentId';
           } else {
-            foundName = 'Giảng viên $id';
+            // Giảng viên: Ưu tiên users/fullName
+            foundName = userData['fullName'] as String?;
+            foundName ??= user.email ?? 'Giảng viên';
           }
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      // Không có mạng: dùng cache local
+      final prefs = await SharedPreferences.getInstance();
+      foundName = prefs.getString('user_name');
+    }
+
+    // Cập nhật cache local
+    if (foundName != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_name', foundName);
+    }
 
     setState(() {
-      _userName = savedName ?? foundName ?? (widget.role == 'student' ? 'Nguyễn Văn Sinh Viên' : 'Tiến sĩ Giảng Viên');
+      _userName = foundName ??
+          (widget.role == 'student' ? 'Nguyễn Văn Sinh Viên' : 'Tiến sĩ Giảng Viên');
     });
   }
 
