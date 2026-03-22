@@ -576,84 +576,16 @@ class _LecturerGradingTab extends StatelessWidget {
     required String classId,
     required StudentRecord student,
   }) async {
-    final midtermController = TextEditingController(
-      text: student.midtermScore?.toStringAsFixed(1),
-    );
-    final finalController = TextEditingController(
-      text: student.finalScore?.toStringAsFixed(1),
-    );
-
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text('Nhập điểm - ${student.fullName}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: midtermController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'Điểm giữa kỳ (0 - 10)',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: finalController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'Điểm cuối kỳ (0 - 10)',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Hủy'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final midterm = double.tryParse(midtermController.text.trim());
-                final finalScore = double.tryParse(finalController.text.trim());
-
-                if (midterm == null || finalScore == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Điểm phải là số hợp lệ.')),
-                  );
-                  return;
-                }
-
-                if (midterm < 0 || midterm > 10 || finalScore < 0 || finalScore > 10) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Điểm hợp lệ trong khoảng 0 đến 10.')),
-                  );
-                  return;
-                }
-
-                context.read<LecturerModuleCubit>().updateStudentGrade(
-                      classId: classId,
-                      studentId: student.id,
-                      midtermScore: midterm,
-                      finalScore: finalScore,
-                    );
-
-                Navigator.of(dialogContext).pop();
-              },
-              child: const Text('Lưu'),
-            ),
-          ],
+        return _GradeEditDialog(
+          cubit: context.read<LecturerModuleCubit>(),
+          classId: classId,
+          student: student,
         );
       },
     );
-
-    midtermController.dispose();
-    finalController.dispose();
   }
 
   String _scoreOrDash(double? score) {
@@ -661,6 +593,112 @@ class _LecturerGradingTab extends StatelessWidget {
       return '--';
     }
     return score.toStringAsFixed(1);
+  }
+}
+
+class _GradeEditDialog extends StatefulWidget {
+  final LecturerModuleCubit cubit;
+  final String classId;
+  final StudentRecord student;
+
+  const _GradeEditDialog({
+    required this.cubit,
+    required this.classId,
+    required this.student,
+  });
+
+  @override
+  State<_GradeEditDialog> createState() => _GradeEditDialogState();
+}
+
+class _GradeEditDialogState extends State<_GradeEditDialog> {
+  late TextEditingController midtermController;
+  late TextEditingController finalController;
+
+  @override
+  void initState() {
+    super.initState();
+    midtermController = TextEditingController(
+      text: widget.student.midtermScore?.toStringAsFixed(1),
+    );
+    finalController = TextEditingController(
+      text: widget.student.finalScore?.toStringAsFixed(1),
+    );
+  }
+
+  @override
+  void dispose() {
+    // Flutter sẽ tự động vứt controller an toàn khi Dialog thực sự biến mất
+    midtermController.dispose();
+    finalController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Nhập điểm - ${widget.student.fullName}'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: midtermController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            decoration: const InputDecoration(
+              labelText: 'Điểm giữa kỳ (0 - 10)',
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: finalController,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+            ),
+            decoration: const InputDecoration(
+              labelText: 'Điểm cuối kỳ (0 - 10)',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Hủy'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final midterm = double.tryParse(midtermController.text.trim());
+            final finalScore = double.tryParse(finalController.text.trim());
+
+            if (midterm == null || finalScore == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Điểm phải là số hợp lệ.')),
+              );
+              return;
+            }
+
+            if (midterm < 0 || midterm > 10 || finalScore < 0 || finalScore > 10) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Điểm hợp lệ trong khoảng 0 đến 10.')),
+              );
+              return;
+            }
+
+            widget.cubit.updateStudentGrade(
+              classId: widget.classId,
+              studentId: widget.student.id,
+              midtermScore: midterm,
+              finalScore: finalScore,
+            );
+
+            Navigator.of(context).pop();
+          },
+          child: const Text('Lưu'),
+        ),
+      ],
+    );
   }
 }
 
