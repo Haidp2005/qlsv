@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/export_utils.dart';
 
 import '../../domain/models/lecturer_models.dart';
 import '../controllers/lecturer_module_cubit.dart';
@@ -70,9 +71,32 @@ class LecturerClassDetailPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                'Danh sách sinh viên',
-                style: Theme.of(context).textTheme.titleMedium,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Danh sách sinh viên',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                        tooltip: 'In Mới bảng điểm (PDF)',
+                        onPressed: () {
+                          ExportUtils.exportPdf(context, classroom!);
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.table_chart, color: Colors.green),
+                        tooltip: 'Xuất Tệp Lớp (Excel)',
+                        onPressed: () {
+                          ExportUtils.exportExcel(context, classroom!);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               ...classroom.students.map(

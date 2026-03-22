@@ -13,7 +13,8 @@ Got dependencies!
 Try `flutter pub outdated` for more information.
 Analyzing qlsv...                                               
 
-   info - Don't use 'BuildContext's across async gaps - lib\core\utils\export_utils.dart:31:28 - use_build_context_synchronously
-   info - Don't use 'BuildContext's across async gaps - lib\core\utils\export_utils.dart:67:28 - use_build_context_synchronously
+   info - 'Table.fromTextArray' is deprecated and shouldn't be used. Use TableHelper.fromTextArray() instead - lib\core\utils\export_utils.dart:30:17 - deprecated_member_use
 warning - Unused import: '../../data/repositories/auth_repository.dart' - lib\features\auth\presentation\pages\login_page.dart:8:8 - unused_import
+  error - The method 'exportPdfDummy' isn't defined for the type 'ExportUtils' - lib\features\profile\presentation\pages\profile_page.dart:28:35 - undefined_method
+  error - The method 'exportExcelDummy' isn't defined for the type 'ExportUtils' - lib\features\profile\presentation\pages\profile_page.dart:36:35 - undefined_method
 

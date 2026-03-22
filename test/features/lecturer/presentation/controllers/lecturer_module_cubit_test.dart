@@ -23,6 +23,7 @@ class _FakeLecturerRepository implements LecturerRepository {
   Future<void> submitAttendanceSession({
     required String classId,
     required Map<String, bool> attendanceByStudent,
+    required String date,
   }) async {}
 
   @override

@@ -8,6 +8,7 @@ class StudentRecord extends Equatable {
     this.totalSessions = 0,
     this.midtermScore,
     this.finalScore,
+    this.attendanceRecords = const {},
   });
 
   final String id;
@@ -16,6 +17,7 @@ class StudentRecord extends Equatable {
   final int totalSessions;
   final double? midtermScore;
   final double? finalScore;
+  final Map<String, bool> attendanceRecords;
 
   bool get hasFullGrade => midtermScore != null && finalScore != null;
 
@@ -42,6 +44,7 @@ class StudentRecord extends Equatable {
     double? finalScore,
     bool clearMidtermScore = false,
     bool clearFinalScore = false,
+    Map<String, bool>? attendanceRecords,
   }) {
     return StudentRecord(
       id: id ?? this.id,
@@ -50,6 +53,7 @@ class StudentRecord extends Equatable {
       totalSessions: totalSessions ?? this.totalSessions,
       midtermScore: clearMidtermScore ? null : (midtermScore ?? this.midtermScore),
       finalScore: clearFinalScore ? null : (finalScore ?? this.finalScore),
+      attendanceRecords: attendanceRecords ?? this.attendanceRecords,
     );
   }
 
@@ -61,6 +65,7 @@ class StudentRecord extends Equatable {
         totalSessions,
         midtermScore,
         finalScore,
+        attendanceRecords,
       ];
 }
 

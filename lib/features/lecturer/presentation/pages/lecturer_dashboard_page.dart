@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/routes/route_constants.dart';
+import '../../../auth/presentation/bloc/auth_cubit.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 
 import '../../domain/models/lecturer_models.dart';
 import '../controllers/lecturer_module_cubit.dart';
@@ -16,15 +20,19 @@ class _LecturerDashboardPageState extends State<LecturerDashboardPage> {
   int _currentTabIndex = 0;
 
   static const List<Widget> _tabTitles = [
-    Text('Giảng viên - Lớp học phần'),
-    Text('Giảng viên - Điểm danh'),
-    Text('Giảng viên - Nhập điểm'),
+    Text('TH5 - Nhóm 13 - Lớp học phần'),
+    Text('TH5 - Nhóm 13 - Điểm danh'),
+    Text('TH5 - Nhóm 13 - Nhập điểm'),
   ];
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => LecturerModuleCubit(),
+      create: (context) {
+        final authState = context.read<AuthCubit>().state;
+        final uid = (authState is AuthSuccess) ? authState.user.uid : 'lecturer_demo_001';
+        return LecturerModuleCubit(lecturerId: uid);
+      },
       child: BlocListener<LecturerModuleCubit, LecturerModuleState>(
         listenWhen: (previous, current) =>
             previous.feedbackMessage != current.feedbackMessage ||
@@ -59,6 +67,11 @@ class _LecturerDashboardPageState extends State<LecturerDashboardPage> {
               appBar: AppBar(
                 title: _tabTitles[_currentTabIndex],
                 actions: [
+                  IconButton(
+                    tooltip: 'Hồ sơ & Xuất File (Dev 4)',
+                    icon: const Icon(Icons.person_pin, size: 28),
+                    onPressed: () => context.push(RouteConstants.profile),
+                  ),
                   IconButton(
                     tooltip: 'Đồng bộ Firestore',
                     onPressed: state.isSyncing
@@ -408,10 +421,20 @@ class _LecturerAttendanceTab extends StatelessWidget {
                   ],
                 ),
               ),
-            if (selectedClass != null)
+            if (selectedClass != null) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Text(
+                  'Điểm danh ngày: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blue),
+                ),
+              ),
               ...selectedClass.students.map(
                 (student) {
-                  final isPresent = currentDraft[student.id] ?? false;
+                  final today = DateTime.now().toIso8601String().split('T')[0];
+                  final isPresent = currentDraft.containsKey(student.id) 
+                      ? currentDraft[student.id]! 
+                      : (student.attendanceRecords[today] ?? false);
 
                   return Card(
                     child: CheckboxListTile(
@@ -438,6 +461,7 @@ class _LecturerAttendanceTab extends StatelessWidget {
                   );
                 },
               ),
+            ],
             const SizedBox(height: 10),
             FilledButton.icon(
               onPressed: selectedClass == null

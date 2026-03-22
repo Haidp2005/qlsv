@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/routes/route_constants.dart';
@@ -28,8 +29,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUserName() async {
     final prefs = await SharedPreferences.getInstance();
     final savedName = prefs.getString('user_name');
+    String? foundName;
+    String id = '';
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (userDoc.exists && userDoc.data() != null) {
+          final userData = userDoc.data()!;
+          id = userData['studentId'] as String? ?? '';
+          
+          if (userData['role'] == 'student' && id.isNotEmpty) {
+            final classSnaps = await FirebaseFirestore.instance.collection('classes').where('studentIds', arrayContains: id).limit(1).get();
+            if (classSnaps.docs.isNotEmpty) {
+              final studentSnap = await classSnaps.docs.first.reference.collection('students').doc(id).get();
+              if (studentSnap.exists && studentSnap.data() != null) {
+                foundName = studentSnap.data()!['fullName'] as String?;
+              }
+            }
+            foundName ??= 'Sinh viên $id';
+          } else {
+            foundName = 'Giảng viên $id';
+          }
+        }
+      }
+    } catch (_) {}
+
     setState(() {
-      _userName = savedName ?? (widget.role == 'student' ? 'Nguyễn Văn Sinh Viên' : 'Tiến sĩ Giảng Viên');
+      _userName = savedName ?? foundName ?? (widget.role == 'student' ? 'Nguyễn Văn Sinh Viên' : 'Tiến sĩ Giảng Viên');
     });
   }
 
@@ -95,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
                 if (context.mounted) {
-                  context.go(RouteConstants.dashboard);
+                  context.go(RouteConstants.login);
                 }
               },
             ),

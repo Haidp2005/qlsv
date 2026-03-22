@@ -11,6 +11,7 @@ abstract class LecturerRepository {
   Future<void> submitAttendanceSession({
     required String classId,
     required Map<String, bool> attendanceByStudent,
+    required String date,
   });
 
   Future<void> updateStudentGrade({

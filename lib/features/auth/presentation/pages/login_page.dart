@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/routes/route_constants.dart';
 import '../../../../core/widgets/custom_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
-import '../../data/repositories/auth_repository.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/auth_state.dart';
 
@@ -85,9 +84,9 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 48),
                     CustomTextField(
                       controller: _emailController,
-                      label: 'Email / Mã số',
-                      prefixIcon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
+                      label: 'Tài khoản (MSSV / Mã GV)',
+                      prefixIcon: Icons.person_outline,
+                      keyboardType: TextInputType.text,
                     ),
                     const SizedBox(height: 16),
                     CustomTextField(

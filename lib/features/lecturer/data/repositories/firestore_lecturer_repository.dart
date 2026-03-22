@@ -77,6 +77,7 @@ class FirestoreLecturerRepository implements LecturerRepository {
         'room': classroom.room,
         'schedule': classroom.schedule,
         'lecturerId': lecturerId,
+        'studentIds': classroom.students.map((s) => s.id).toList(),
       });
 
       for (final student in classroom.students) {
@@ -99,6 +100,7 @@ class FirestoreLecturerRepository implements LecturerRepository {
   Future<void> submitAttendanceSession({
     required String classId,
     required Map<String, bool> attendanceByStudent,
+    required String date,
   }) async {
     final classRef = _classesCollection.doc(classId);
     final studentsSnapshot = await classRef.collection('students').get();
@@ -110,12 +112,30 @@ class FirestoreLecturerRepository implements LecturerRepository {
           (studentDoc.data()['studentId'] as String?) ?? studentDoc.id;
       final isPresent = attendanceByStudent[studentId] ?? false;
 
+      final data = studentDoc.data();
+      final records = Map<String, dynamic>.from(data['attendanceRecords'] as Map? ?? {});
+      int attended = (data['attendedSessions'] as num?)?.toInt() ?? 0;
+      int total = (data['totalSessions'] as num?)?.toInt() ?? 0;
+
+      if (records.containsKey(date)) {
+        bool wasPresent = records[date] as bool;
+        if (wasPresent != isPresent) {
+           attended += isPresent ? 1 : -1;
+        }
+      } else {
+        total += 1;
+        if (isPresent) attended += 1;
+      }
+      
+      records[date] = isPresent;
+
       batch.set(
         studentDoc.reference,
         {
           'studentId': studentId,
-          'attendedSessions': FieldValue.increment(isPresent ? 1 : 0),
-          'totalSessions': FieldValue.increment(1),
+          'attendedSessions': attended,
+          'totalSessions': total,
+          'attendanceRecords': records,
         },
         SetOptions(merge: true),
       );
@@ -156,6 +176,7 @@ class FirestoreLecturerRepository implements LecturerRepository {
       totalSessions: _toInt(data['totalSessions']),
       midtermScore: _toDoubleOrNull(data['midtermScore']),
       finalScore: _toDoubleOrNull(data['finalScore']),
+      attendanceRecords: Map<String, bool>.from(data['attendanceRecords'] as Map? ?? {}),
     );
   }
 

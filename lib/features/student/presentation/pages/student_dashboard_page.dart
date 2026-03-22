@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/routes/route_constants.dart';
+import '../../../auth/presentation/bloc/auth_cubit.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 
 import '../../data/models/student_models.dart';
-import '../../data/repositories/student_mock_repository.dart';
+import '../../data/repositories/firestore_student_repository.dart';
 import '../widgets/student_overview_tab.dart';
 import '../widgets/student_subjects_tab.dart';
 import '../widgets/student_timetable_tab.dart';
@@ -14,13 +19,24 @@ class StudentDashboardPage extends StatefulWidget {
 }
 
 class _StudentDashboardPageState extends State<StudentDashboardPage> {
-  final StudentMockRepository _repository = StudentMockRepository();
-
-  late final Future<StudentHomeData> _homeDataFuture = _repository
-      .fetchStudentHomeData();
+  final FirestoreStudentRepository _repository = FirestoreStudentRepository();
+  late Future<StudentHomeData> _homeDataFuture;
   int _currentIndex = 0;
 
   static const _tabTitles = <String>['Tổng quan', 'Thời khóa biểu', 'Môn học'];
+
+  @override
+  void initState() {
+    super.initState();
+    final authState = context.read<AuthCubit>().state;
+    String studentId = 'SV001';
+    String email = 'SV001';
+    if (authState is AuthSuccess) {
+      email = authState.user.email;
+      studentId = email.split('@')[0].toUpperCase();
+    }
+    _homeDataFuture = _repository.fetchStudentHomeData(studentId, email);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +51,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
 
         if (snapshot.hasError || !snapshot.hasData) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Sinh viên')),
+            appBar: AppBar(title: const Text('TH5 - Nhóm 13')),
             body: const Center(
               child: Text('Không tải được dữ liệu sinh viên.'),
             ),
@@ -52,6 +68,13 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
         return Scaffold(
           appBar: AppBar(
             title: Text('Sinh viên - ${_tabTitles[_currentIndex]}'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.person_pin, size: 28),
+                tooltip: 'Hồ sơ & Xuất File',
+                onPressed: () => context.push(RouteConstants.profile),
+              ),
+            ],
           ),
           body: tabViews[_currentIndex],
           bottomNavigationBar: NavigationBar(

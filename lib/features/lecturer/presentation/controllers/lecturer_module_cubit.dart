@@ -280,12 +280,30 @@ class LecturerModuleCubit extends Cubit<LecturerModuleState> {
       return;
     }
 
+    final today = DateTime.now().toIso8601String().split('T')[0];
     final classDraft = state.attendanceDraftByClass[classId] ?? const {};
     final updatedStudents = targetClass.students.map((student) {
-      final isPresent = classDraft[student.id] ?? false;
+      final isPresent = classDraft[student.id] ?? (student.attendanceRecords[today] ?? false);
+      
+      final records = Map<String, bool>.from(student.attendanceRecords);
+      int attended = student.attendedSessions;
+      int total = student.totalSessions;
+      
+      if (records.containsKey(today)) {
+         bool wasPresent = records[today]!;
+         if (wasPresent != isPresent) {
+            attended += isPresent ? 1 : -1;
+         }
+      } else {
+         total += 1;
+         if (isPresent) attended += 1;
+      }
+      records[today] = isPresent;
+
       return student.copyWith(
-        totalSessions: student.totalSessions + 1,
-        attendedSessions: student.attendedSessions + (isPresent ? 1 : 0),
+        totalSessions: total,
+        attendedSessions: attended,
+        attendanceRecords: records,
       );
     }).toList();
 
@@ -322,6 +340,7 @@ class LecturerModuleCubit extends Cubit<LecturerModuleState> {
       await _repository.submitAttendanceSession(
         classId: classId,
         attendanceByStudent: attendanceByStudent,
+        date: today,
       );
       if (isClosed) {
         return;
